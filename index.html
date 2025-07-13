@@ -1,82 +1,8 @@
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Image to Text Converter</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #111;
-      color: #eee;
-      text-align: center;
-      padding: 20px;
-    }
-    input {
-      margin: 20px 0;
-    }
-    #ascii {
-      white-space: pre;
-      font-size: 6px;
-      line-height: 6px;
-      text-align: left;
-      max-width: 100%;
-      overflow-wrap: break-word;
-      margin: auto;
-    }
-  </style>
+<title>Debanshu Dey</title>
 </head>
 <body>
-
-  <h1>Image to ASCII Text</h1>
-  <input type="file" accept="image/*" onchange="convertImageToText(event)">
-  <pre id="ascii">Upload an image to convert it into text...</pre>
-
-  <canvas id="canvas" style="display:none;"></canvas>
-
-  <script>
-    const asciiChars = "@%#*+=-:. ";  // From darkest to lightest
-
-    function convertImageToText(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const maxWidth = 100;  // Resize width for performance and readability
-          const scale = maxWidth / img.width;
-          const canvas = document.getElementById('canvas');
-          const ctx = canvas.getContext('2d');
-
-          canvas.width = maxWidth;
-          canvas.height = img.height * scale;
-
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const pixels = imageData.data;
-          let ascii = "";
-
-          for (let y = 0; y < canvas.height; y++) {
-            for (let x = 0; x < canvas.width; x++) {
-              const i = (y * canvas.width + x) * 4;
-              const r = pixels[i];
-              const g = pixels[i + 1];
-              const b = pixels[i + 2];
-              const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-              const charIndex = Math.floor((brightness / 255) * (asciiChars.length - 1));
-              ascii += asciiChars[charIndex];
-            }
-            ascii += "\n";
-          }
-
-          document.getElementById('ascii').textContent = ascii;
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  </script>
-
+<h1 align="center"> Hello, welcome to my website</h1>
 </body>
 </html>
