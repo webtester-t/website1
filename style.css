@@ -1,16 +1,12 @@
 body {
-      margin: 0;
-      padding: 0;
-      background-color: #111;
-      font-family: 'Consolas', monospace;
+      background: #111;
       color: #eee;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      font-family: monospace;
+      text-align: center;
+      padding: 20px;
     }
 
-    .intro-box {
+.intro-box {
       background-color: #1a1a1a;
       padding: 40px 30px;
       border-radius: 20px;
@@ -19,6 +15,47 @@ body {
       width: 90vw;
       box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
     }
+
+    input, button, label {
+      margin: 8px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: Consolas, monospace;
+      border-radius: 6px;
+      border: none;
+      background: #333;
+      color: #eee;
+    }
+
+    #ascii-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    #ascii-box {
+      white-space: pre;
+      line-height: 6px;
+      font-size: 6px;
+      background-color: #1a1a1a;
+      padding: 20px;
+      border: 1px solid #666;
+      border-radius: 8px;
+      max-width: 90vw;
+      overflow-x: auto;
+    }
+
+    .hidden-buttons {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .visible {
+      display: inline-block;
+    }
+
+    
 
     h1 {
       font-size: 28px;
