@@ -1,0 +1,18 @@
+body { background-color: #111; color: #eee; font-family: 'Consolas', monospace; text-align: center; padding: 20px; margin: 0; }
+
+h1 { font-size: 2em; margin-bottom: 20px; }
+
+input[type="file"], input[type="checkbox"], input[type="range"], button, label { font-family: 'Consolas', monospace; font-size: 14px; margin: 8px; padding: 6px 12px; cursor: pointer; border-radius: 6px; background-color: #222; color: #eee; border: 1px solid #444; transition: background-color 0.2s, color 0.2s; }
+
+button:hover, input[type="file"]:hover, input[type="range"]:hover, label:hover { background-color: #333; color: #fff; }
+
+#ascii-container { display: flex; justify-content: center; margin-top: 20px; }
+
+#ascii-box { white-space: pre; line-height: 6px; font-size: 6px; background-color: #1a1a1a; padding: 20px; border: 1px solid #666; border-radius: 8px; max-width: 90vw; overflow-x: auto; display: inline-block; }
+
+.hidden-buttons { display: none; }
+
+.visible-buttons { display: inline-block; }
+
+/* Optional: center slider and label */ .slider-label { display: block; margin-top: 10px; color: #aaa; }
+
