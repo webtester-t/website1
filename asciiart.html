@@ -1,0 +1,190 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Debanshu Dey's Art Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1 align="center">Image to Text Art</h1>
+
+  <input type="file" accept="image/*" id="imageInput"><br>
+
+  <label for="qualitySlider">🧵 Quality: <span id="qualityValue">1x</span></label><br>
+  <input type="range" id="qualitySlider" min="0.5" max="8" step="0.5" value="1"><br>
+
+  <button onclick="generateAscii()">⚙️ Generate</button>
+
+  <div id="ascii-container">
+    <div id="ascii-box"><i>Upload an image, then click "Generate"</i></div>
+  </div>
+
+  <div id="buttonPanel" class="hidden-buttons">
+    <button onclick="copyAscii()">📋 Copy</button>
+    <button onclick="downloadAscii()">⬇️ Download TXT</button>
+    <button onclick="saveAsImage()">🖼️ Save as Image (PNG)</button>
+    <button onclick="clearOutput()">🧹 Clear</button>
+  </div>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const asciiChars = "@%#*+=-:. ";
+    let lastText = "";
+    let uploadedImage = null;
+
+    const qualitySlider = document.getElementById("qualitySlider");
+    const qualityValue = document.getElementById("qualityValue");
+
+    qualitySlider.addEventListener("input", function () {
+      qualityValue.textContent = `${this.value}x`;
+    });
+
+    document.getElementById("imageInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          uploadedImage = img;
+          document.getElementById("ascii-box").innerHTML = "<i>Image loaded. Click 'Generate' to convert.</i>";
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function generateAscii() {
+      if (!uploadedImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const multiplier = parseFloat(qualitySlider.value);
+      const maxWidth = 100 * multiplier;
+      const charAspectRatio = 0.5;
+
+      const scale = maxWidth / uploadedImage.width;
+      const width = Math.floor(maxWidth);
+      const height = Math.floor(uploadedImage.height * scale * charAspectRatio);
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = width;
+      canvas.height = height;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(uploadedImage, 0, 0, width, height);
+
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      let html = "";
+      let text = "";
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          let charIndex = Math.floor((brightness / 255) * (asciiChars.length - 1));
+          charIndex = Math.max(0, Math.min(charIndex, asciiChars.length - 1));
+          const char = asciiChars[charIndex];
+
+          html += `<span style="color: rgb(${r},${g},${b})">${char}</span>`;
+          text += char;
+        }
+        html += "<br>";
+        text += "\n";
+      }
+
+      document.getElementById("ascii-box").innerHTML = html;
+      document.getElementById("buttonPanel").classList.add("visible");
+      lastText = text.trimEnd(); // remove extra blank lines
+    }
+
+    function copyAscii() {
+      const temp = document.createElement("textarea");
+      temp.value = lastText;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+      alert("Copied to clipboard!");
+    }
+
+    function downloadAscii() {
+      const blob = new Blob([lastText], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ascii_art.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function saveAsImage() {
+      if (!lastText) return alert("Generate ASCII art first!");
+
+      const charWidth = 6;
+      const charHeight = 10;
+
+      const lines = lastText.split("\n").filter(line => line.trim() !== "");
+      if (lines.length === 0 || lines[0].length === 0) {
+        alert("Nothing to export");
+        return;
+      }
+
+      const width = lines[0].length * charWidth;
+      const height = lines.length * charHeight;
+
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = width;
+      exportCanvas.height = height;
+      const ctx = exportCanvas.getContext("2d");
+
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, width, height);
+      ctx.font = `${charHeight}px Consolas`;
+      ctx.textBaseline = "top";
+      ctx.imageSmoothingEnabled = false;
+
+      const asciiBox = document.getElementById("ascii-box");
+      const spans = asciiBox.getElementsByTagName("span");
+
+      let i = 0;
+      for (let y = 0; y < lines.length; y++) {
+        for (let x = 0; x < lines[y].length; x++) {
+          if (i >= spans.length) break;
+          const char = spans[i].textContent;
+          const color = spans[i].style.color || "#fff";
+          ctx.fillStyle = color;
+          ctx.fillText(char, x * charWidth, y * charHeight);
+          i++;
+        }
+      }
+
+      const link = document.createElement("a");
+      link.download = "ascii_art.png";
+      link.href = exportCanvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function clearOutput() {
+      document.getElementById("ascii-box").innerHTML = "<i>Upload an image, then click 'Generate'</i>";
+      document.getElementById("buttonPanel").classList.remove("visible");
+      lastText = "";
+      uploadedImage = null;
+      document.getElementById("imageInput").value = "";
+    }
+  </script>
+
+</body>
+</html>
