@@ -1,17 +1,65 @@
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Debanshu Dey</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Debanshu's ASCII Art Tool</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      font-family: 'Consolas', monospace;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .intro-box {
+      background-color: #1a1a1a;
+      padding: 40px 30px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 600px;
+      width: 90vw;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #ccc;
+      margin-bottom: 28px;
+    }
+
+    a.button {
+      text-decoration: none;
+      padding: 10px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      background-color: #333;
+      color: #eee;
+      display: inline-block;
+      transition: background 0.2s ease;
+    }
+
+    a.button:hover {
+      background-color: #444;
+    }
+  </style>
 </head>
 <body>
 
-  <h1>🎨 Welcome to My Website</h1>
-</br>
-  <p>Create colorful ASCII art from your favorite images.</p>
-
-  <a href="./asciiart.html" class="button">✨ Launch the Tool</a>
+  <div class="intro-box">
+    <h1>🖼️ ASCII Image Converter</h1>
+    <p>Convert your images into beautiful colored ASCII art right in your browser. Customize quality, download, and share easily.</p>
+    <a href="asciiart.html" class="button">Launch Tool 🚀</a>
+  </div>
 
 </body>
 </html>
