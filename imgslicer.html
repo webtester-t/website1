@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Grid Splitter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Image Grid Splitter</h1>
+        
+        <div class="controls">
+            <input type="file" id="imageUpload" class="file-input" accept="image/*">
+            <label for="imageUpload" class="file-label">Choose Image</label>
+            
+            <div class="grid-options">
+                <span>Grid:</span>
+                <button id="btn1x1" class="active">1×1</button>
+                <button id="btn1x2">1×2</button>
+                <button id="btn2x1">2×1</button>
+                <button id="btn2x2">2×2</button>
+                <button id="btn3x3">3×3</button>
+		<button id="btn3x4">3×4</button>
+            </div>
+        </div>
+        
+<div class="custom-grid">
+    <span>Custom Grid:</span>
+    Rows: <input type="number" id="customRows" min="1" max="20" value="2" style="width:50px;">
+    Columns: <input type="number" id="customCols" min="1" max="20" value="2" style="width:50px;">
+    <button id="applyCustomGrid">Set</button>
+</div>
+
+        <div class="image-container">
+	  <div align="center">
+            <img id="originalImage" alt="Uploaded Image">
+        </div>
+        
+        <div class="results">
+            <h2>Grid Pieces Preview</h2>
+            <div class="grid-pieces-container">
+                <div class="grid-pieces" id="gridPieces"></div>
+            </div>
+            <div class="download-all">
+		<button id="clearBtn">🧹 Clear</button>
+                <button id="downloadAll">⬇️ Download All Parts as ZIP</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageUpload = document.getElementById('imageUpload');
+    const originalImage = document.getElementById('originalImage');
+    const gridPieces = document.getElementById('gridPieces');
+    const downloadAllBtn = document.getElementById('downloadAll');
+    const clearBtn = document.getElementById('clearBtn');
+    const customRowsInput = document.getElementById('customRows');
+    const customColsInput = document.getElementById('customCols');
+    const applyCustomGridBtn = document.getElementById('applyCustomGrid');
+    const sliceBtn = document.getElementById('sliceBtn');
+
+    let currentImage = null;
+    let currentGrid = { rows: 1, cols: 1 };
+    let imagePieces = [];
+
+    const previewSize = 600;
+
+    const gridButtons = {
+        'btn1x1': { rows: 1, cols: 1 },
+        'btn1x2': { rows: 1, cols: 2 },
+        'btn2x1': { rows: 2, cols: 1 },
+        'btn2x2': { rows: 2, cols: 2 },
+        'btn3x3': { rows: 3, cols: 3 },
+        'btn3x4': { rows: 3, cols: 4 },
+    };
+
+    // Grid button click
+    Object.keys(gridButtons).forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        btn.addEventListener('click', () => {
+            Object.keys(gridButtons).forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            btn.classList.add('active');
+            currentGrid = gridButtons[btnId];
+            if (currentImage) {
+                splitImage();
+                displayGridPieces();
+            }
+        });
+    });
+
+    // Image upload
+    imageUpload.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage.src = event.target.result;
+                originalImage.style.display = 'block';
+                originalImage.onload = function() {
+                    currentImage = originalImage;
+                    splitImage();
+                    displayGridPieces();
+                };
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // Drag and Drop
+    document.body.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    });
+
+    document.body.addEventListener('drop', function (e) {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage.src = event.target.result;
+                originalImage.style.display = 'block';
+                originalImage.onload = function() {
+                    currentImage = originalImage;
+                    splitImage();
+                    displayGridPieces();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+        imageUpload.value = '';
+        originalImage.src = '';
+        originalImage.style.display = 'none';
+        gridPieces.innerHTML = '';
+        imagePieces = [];
+        currentImage = null;
+        customRowsInput.value = '';
+        customColsInput.value = '';
+        Object.keys(gridButtons).forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+        currentGrid = { rows: 1, cols: 1 };
+    });
+
+    // Apply Custom Grid (optional)
+    applyCustomGridBtn.addEventListener('click', () => {
+        const rows = parseInt(customRowsInput.value);
+        const cols = parseInt(customColsInput.value);
+        if (!currentImage) {
+            alert("Please upload an image first.");
+            return;
+        }
+        if (rows > 0 && cols > 0) {
+            currentGrid = { rows, cols };
+            Object.keys(gridButtons).forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            splitImage();
+            displayGridPieces();
+        } else {
+            alert("Rows and Columns must be greater than 0");
+        }
+    });
+
+    // Slice button — primary trigger
+    sliceBtn.addEventListener('click', () => {
+        if (!currentImage) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        const rows = parseInt(customRowsInput.value);
+        const cols = parseInt(customColsInput.value);
+
+        if (rows > 0 && cols > 0) {
+            currentGrid = { rows, cols };
+            Object.keys(gridButtons).forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+        }
+
+        splitImage();
+        displayGridPieces();
+    });
+
+    function splitImage() {
+        if (!currentImage) return;
+        const width = currentImage.naturalWidth;
+        const height = currentImage.naturalHeight;
+        const rows = currentGrid.rows;
+        const cols = currentGrid.cols;
+
+        const pieceWidth = width / cols;
+        const pieceHeight = height / rows;
+
+        const sourceCanvas = document.createElement('canvas');
+        sourceCanvas.width = width;
+        sourceCanvas.height = height;
+        const sourceCtx = sourceCanvas.getContext('2d');
+        sourceCtx.drawImage(currentImage, 0, 0, width, height);
+
+        imagePieces = [];
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = pieceWidth;
+                canvas.height = pieceHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(
+                    sourceCanvas,
+                    c * pieceWidth, r * pieceHeight, pieceWidth, pieceHeight,
+                    0, 0, pieceWidth, pieceHeight
+                );
+                imagePieces.push({
+                    imageData: canvas.toDataURL('image/png'),
+                    row: r,
+                    col: c
+                });
+            }
+        }
+    }
+
+    function displayGridPieces() {
+        if (!currentImage || imagePieces.length === 0) return;
+        gridPieces.innerHTML = '';
+        const rows = currentGrid.rows;
+        const cols = currentGrid.cols;
+        gridPieces.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        gridPieces.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+        const pieceWidth = currentImage.naturalWidth / cols;
+        const pieceHeight = currentImage.naturalHeight / rows;
+        const aspectRatio = pieceWidth / pieceHeight;
+        const displayWidth = previewSize / cols;
+        const displayHeight = displayWidth / aspectRatio;
+
+        imagePieces.forEach(piece => {
+            const img = document.createElement('img');
+            img.src = piece.imageData;
+            img.alt = `Piece ${piece.row + 1}-${piece.col + 1}`;
+            img.style.width = `${displayWidth}px`;
+            img.style.height = `${displayHeight}px`;
+            gridPieces.appendChild(img);
+        });
+    }
+
+    downloadAllBtn.addEventListener('click', async function() {
+        if (!currentImage || imagePieces.length === 0) {
+            alert('Please upload an image and split it first');
+            return;
+        }
+
+        try {
+            const zip = new JSZip();
+            const imgFolder = zip.folder("image_pieces");
+            imagePieces.forEach((piece, index) => {
+                const blob = dataURLtoBlob(piece.imageData);
+                imgFolder.file(`${index + 1}.png`, blob);
+            });
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, "image_pieces.zip");
+        } catch (error) {
+            console.error("Error creating ZIP file:", error);
+            alert("Error creating ZIP file. Please try again.");
+        }
+    });
+
+    function dataURLtoBlob(dataURL) {
+        const arr = dataURL.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    }
+});
+</script>
+
+</body>
+</html>

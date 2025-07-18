@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multi-Minifier Tool</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <div class="editor-container">
+    <textarea id="input" placeholder="Paste HTML/CSS/JS here..."></textarea>
+    <div class="button-row">
+      <button onclick="shorten()">🤏 Shorten</button>
+    </div>
+    <textarea id="output" placeholder="Shortened code will appear here..."></textarea>
+  </div>
+      <button onclick="clearAll()">🧹 Clear</button>
+      <button onclick="copyOutput()">📋 Copy Shortened Code</button>
+      <button onclick="downloadOutput()">⬇️ Download TXT</button>
+  <script>
+    function shortenHTML(html) {
+      return html
+        .replace(/>\s+</g, '><')         // Remove space between tags
+        .replace(/\s{2,}/g, ' ')         // Collapse extra spaces
+        .replace(/\n/g, '')              // Remove newlines
+        .trim();
+    }
+
+    function shortenJS(js) {
+      return js
+        .replace(/\/\/.*(?=[\n\r])/g, '')          // Remove single-line comments
+        .replace(/\/\*[\s\S]*?\*\//g, '')          // Remove block comments
+        .replace(/\s{2,}/g, ' ')                   // Collapse spaces
+        .replace(/\n/g, '')                        // Remove newlines
+        .trim();
+    }
+
+    function shortenCSS(css) {
+      return css
+        .replace(/\/\*[\s\S]*?\*\//g, '')          // Remove comments
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\n/g, '')
+        .replace(/\s*{\s*/g, '{')
+        .replace(/\s*}\s*/g, '}')
+        .replace(/\s*;\s*/g, ';')
+        .replace(/\s*:\s*/g, ':')
+        .replace(/\s*,\s*/g, ',')
+        .trim();
+    }
+
+    function shorten() {
+      let html = document.getElementById('input').value;
+
+      // Extract style blocks
+      const styleBlocks = [];
+      html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (match, css) => {
+        const shortened = shortenCSS(css);
+        styleBlocks.push(`<style>${shortened}</ style>`); // NOTE: space added
+        return `___STYLE_BLOCK_${styleBlocks.length - 1}___`;
+      });
+
+      // Extract script blocks
+      const scriptBlocks = [];
+      html = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, (match, js) => {
+        const shortened = shortenJS(js);
+        scriptBlocks.push(`<script>${shortened}</ script>`); // NOTE: space added
+        return `___SCRIPT_BLOCK_${scriptBlocks.length - 1}___`;
+      });
+
+      // Shorten remaining HTML
+      let finalHTML = shortenHTML(html);
+
+      // Reinsert style blocks
+      styleBlocks.forEach((block, i) => {
+        finalHTML = finalHTML.replace(`___STYLE_BLOCK_${i}___`, block);
+      });
+
+      // Reinsert script blocks
+      scriptBlocks.forEach((block, i) => {
+        finalHTML = finalHTML.replace(`___SCRIPT_BLOCK_${i}___`, block);
+      });
+
+      document.getElementById('output').value = finalHTML;
+    }
+
+    function clearAll() {
+      document.getElementById('input').value = '';
+      document.getElementById('output').value = '';
+    }
+
+    function copyOutput() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      alert("Shortened code copied!");
+    }
+
+    function downloadOutput() {
+      const content = document.getElementById('output').value;
+      const blob = new Blob([content], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'shortened_code.txt';
+      link.click();
+    }
+  </script>
+</body>
+</html>
