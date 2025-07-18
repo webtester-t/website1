@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Grid Splitter</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -169,27 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             alert("Rows and Columns must be greater than 0");
         }
-    });
-
-    // Slice button — primary trigger
-    sliceBtn.addEventListener('click', () => {
-        if (!currentImage) {
-            alert("Please upload an image first.");
-            return;
-        }
-
-        const rows = parseInt(customRowsInput.value);
-        const cols = parseInt(customColsInput.value);
-
-        if (rows > 0 && cols > 0) {
-            currentGrid = { rows, cols };
-            Object.keys(gridButtons).forEach(id => {
-                document.getElementById(id).classList.remove('active');
-            });
-        }
-
-        splitImage();
-        displayGridPieces();
     });
 
     function splitImage() {
