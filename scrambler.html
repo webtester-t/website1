@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Scrambler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="scrambler-title">Word Scrambler</h1>
+        <div class="input-section">
+            <textarea id="input-text" class="input-text" placeholder="Enter your text here..."></textarea>
+        </div>
+        <div class="button-section">
+            <button id="scramble-btn" class="scramble-btn">🔄 Scramble Text</button>
+        </div>
+        <h2 class="output-title">Scrambled Output:</h2>
+        <div class="output-section">
+            <div id="output-text" class="output-text"></div></div>
+            <div class="output-actions">
+                <button id="clear-btn" class="clear-btn">🧹 Clear</button>
+                <button id="copy-btn" class="copy-btn">📋 Copy Text</button>
+                <button id="download-btn" class="download-btn">⬇️ Download as TXT</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputText = document.getElementById('input-text');
+            const outputText = document.getElementById('output-text');
+            const scrambleBtn = document.getElementById('scramble-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            scrambleBtn.addEventListener('click', scrambleText);
+            clearBtn.addEventListener('click', clearAll);
+            copyBtn.addEventListener('click', copyToClipboard);
+            downloadBtn.addEventListener('click', downloadAsTxt);
+            
+            function scrambleText() {
+                const text = inputText.value;
+                if (!text.trim()) {
+                    outputText.textContent = 'Please enter some text to scramble.';
+                    return;
+                }
+                
+                const scrambled = text.split(' ').map(word => {
+                    // Skip scrambling if word is too short
+                    if (word.length <= 3) return word;
+                    
+                    // Handle punctuation and special characters
+                    const firstChar = word[0];
+                    const lastChar = word[word.length - 1];
+                    let middle = word.slice(1, -1);
+                    
+                    // Check if last character is punctuation
+                    const punctuationRegex = /[.,!?;:']$/;
+                    let punctuation = '';
+                    if (punctuationRegex.test(lastChar)) {
+                        punctuation = lastChar;
+                        middle = word.slice(1, -2);
+                    }
+                    
+                    // Scramble middle characters
+                    const scrambledMiddle = scrambleMiddle(middle);
+                    
+                    return punctuation 
+                        ? firstChar + scrambledMiddle + word[word.length - 2] + punctuation
+                        : firstChar + scrambledMiddle + lastChar;
+                }).join(' ');
+                
+                outputText.textContent = scrambled;
+            }
+            
+            function scrambleMiddle(str) {
+                if (str.length <= 1) return str;
+                
+                // Convert to array for shuffling
+                const arr = str.split('');
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr.join('');
+            }
+            
+            function clearAll() {
+                inputText.value = '';
+                outputText.textContent = '';
+            }
+            
+            function copyToClipboard() {
+                if (!outputText.textContent.trim()) {
+                    alert('No scrambled text to copy!');
+                    return;
+                }
+                
+                navigator.clipboard.writeText(outputText.textContent)
+                    .then(() => {
+                        // Visual feedback
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        alert('Failed to copy text. Please try again.');
+                    });
+            }
+            
+            function downloadAsTxt() {
+                if (!outputText.textContent.trim()) {
+                    alert('No scrambled text to download!');
+                    return;
+                }
+                
+                const blob = new Blob([outputText.textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'scrambled-text.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
