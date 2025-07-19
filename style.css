@@ -6,17 +6,6 @@ body {
     padding: 20px;
 }
 
-.intro-box {
-      background-color: #1a1a1a;
-      padding: 40px 30px;
-      border-radius: 20px;
-      text-align: center;
-      max-width: 600px;
-      width: 90vw;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-    }
-
-
 .container {
     background-color: #1a1a1a;
     padding: 40px 30px;
@@ -172,6 +161,19 @@ p {
   text-align: left;
 }
 
+.output-section {
+    margin: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: Consolas, monospace;
+    border-radius: 6px;
+    border: none;
+    background: #333;
+    color: #eee;
+    transition: background 0.2s ease;
+}
+
 /* Large text areas for input/output */
 .code-box {
   width: 90vw;        /* width: 90% of the viewport width */
@@ -225,6 +227,4 @@ textarea {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
-}
-ackground-color: #2980b9;
 }
