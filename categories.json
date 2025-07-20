@@ -1,0 +1,49 @@
+{
+  "Finance Manager": [
+    "invoice", "tax", "payment", "budget", "revenue", "expense", "profit", 
+    "loss", "balance sheet", "financial statement", "audit", "payroll", 
+    "accounts payable", "accounts receivable"
+  ],
+  "Legal": [
+    "contract", "agreement", "law", "litigation", "compliance", "intellectual property", 
+    "trademark", "patent", "dispute", "license", "confidentiality", "legal notice", 
+    "court", "terms and conditions"
+  ],
+  "HR": [
+    "resume", "interview", "candidate", "recruitment", "hiring", "onboarding", 
+    "termination", "performance review", "benefits", "training", "leave", 
+    "employee handbook", "salary", "job description"
+  ],
+  "IT": [
+    "server", "database", "network", "software", "hardware", "encryption", 
+    "cloud", "cybersecurity", "firewall", "API", "debug", "patch", 
+    "deployment", "source code", "DevOps"
+  ],
+  "Marketing": [
+    "campaign", "SEO", "advertising", "branding", "lead generation", 
+    "social media", "email marketing", "content", "market research", 
+    "ROI", "PPC", "newsletter", "promotion", "analytics"
+  ],
+  "Sales": [
+    "prospect", "lead", "deal", "client", "CRM", "negotiation", "quote", 
+    "proposal", "pipeline", "commission", "sales target", "conversion", 
+    "follow-up", "order"
+  ],
+  "Operations": [
+    "logistics", "supply chain", "inventory", "procurement", "warehouse", 
+    "shipping", "order fulfillment", "vendor", "efficiency", "scheduling", 
+    "fleet", "quality control"
+  ],
+  "Customer Support": [
+    "ticket", "support", "issue", "complaint", "response time", "chat", 
+    "email", "call center", "feedback", "escalation", "resolution", "FAQ"
+  ],
+  "Research and Development": [
+    "prototype", "innovation", "R&D", "testing", "design", "iteration", 
+    "specifications", "development", "experiment", "feasibility", "roadmap"
+  ],
+  "Education": [
+    "curriculum", "lesson plan", "exam", "grading", "syllabus", "homework", 
+    "lecture", "attendance", "assignment", "assessment", "student", "faculty"
+  ]
+}

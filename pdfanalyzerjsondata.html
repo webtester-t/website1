@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Keyword Analyzer</title>
+    <link rel="stylesheet" href="styletest.css">
+</head>
+<body>
+    <h1>Document Keyword Analyzer</h1>
+    
+    <!-- Search Box -->
+    <div id="searchContainer">
+        <input type="text" id="searchBox" placeholder="Search categories...">
+        <button id="clearSearch" title="Clear search">×</button>
+        <div id="categoriesContainer"></div>
+    </div>
+    <div class="selected-count" id="selectedCount">0 categories selected</div>
+    
+    <!-- File Upload -->
+    <input type="file" id="fileInput" accept=".pdf,.docx" style="display:none">
+    <div align="center"><button id="customFileButton">📁 Choose Document</button></div>
+    <div id="file-display">No file selected</div>
+    
+    <!-- Action Buttons -->
+    <button id="analyzeButton" disabled>🔍 Analyze</button>
+    <button id="clearButton">❌ Clear All</button>
+    
+    <!-- Results -->
+    <div id="results"></div>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.0/mammoth.browser.min.js"></script>
+
+    <script>
+        // Initialize PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+        // Global variables
+        let categories = {};
+        let selectedCategories = {};
+        let currentFile = null;
+
+        // 1. Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('categories.json');
+                categories = await response.json();
+                Object.keys(categories).forEach(cat => selectedCategories[cat] = false);
+                updateSelectedCount();
+            } catch (error) {
+                console.error("Using fallback categories");
+                categories = {
+                    "Finance": ["invoice", "tax", "payment"],
+                    "Legal": ["contract", "agreement", "law"],
+                    "HR": ["resume", "interview", "candidate"]
+                };
+                updateSelectedCount();
+            }
+            
+            // Initialize event listeners after DOM is ready
+            initEventListeners();
+        }
+
+        // 2. Render category checkboxes based on search
+        function renderCategoryOptions(searchTerm = '') {
+            const container = document.getElementById("categoriesContainer");
+            const searchLower = searchTerm.toLowerCase();
+            
+            // Get all categories that match search OR are selected
+            const filteredCategories = Object.keys(categories).filter(category => 
+                category.toLowerCase().includes(searchLower) || 
+                (selectedCategories[category] && searchTerm !== '')
+            );
+            
+            if (filteredCategories.length === 0) {
+                container.innerHTML = '<div class="no-results">No categories match your search</div>';
+            } else {
+                container.innerHTML = filteredCategories.map(category => `
+                    <div class="category-option ${selectedCategories[category] ? 'selected-category' : ''}">
+                        <input type="checkbox" 
+                               id="cat-${category.toLowerCase()}" 
+                               ${selectedCategories[category] ? 'checked' : ''}
+                               data-category="${category}">
+                        <label for="cat-${category.toLowerCase()}" style="cursor:pointer;">${category}</label>
+                        ${!category.toLowerCase().includes(searchLower) && selectedCategories[category] ? 
+                          '<span style="margin-left:auto;color:#666;font-size:0.9em;">(selected)</span>' : ''}
+                    </div>
+                `).join('');
+            }
+            
+            bindCheckboxEvents();
+        }
+
+        function bindCheckboxEvents() {
+            document.querySelectorAll('#categoriesContainer input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const category = this.getAttribute('data-category');
+                    selectedCategories[category] = this.checked;
+                    updateSelectedCount();
+                    // Re-render to update the "selected" state immediately
+                    renderCategoryOptions(document.getElementById("searchBox").value);
+                });
+            });
+            
+            // Clicking anywhere on the option toggles the checkbox
+            document.querySelectorAll('#categoriesContainer .category-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                        const checkbox = this.querySelector('input');
+                        checkbox.checked = !checkbox.checked;
+                        const event = new Event('change');
+                        checkbox.dispatchEvent(event);
+                    }
+                });
+            });
+        }
+
+        // 3. Update selected count display
+        function updateSelectedCount() {
+            const selectedCount = Object.values(selectedCategories).filter(Boolean).length;
+            const totalCount = Object.keys(selectedCategories).length;
+            document.getElementById("selectedCount").textContent = 
+                `${selectedCount} ${selectedCount === 1 ? 'category' : 'categories'} selected`;
+        }
+
+        // 4. Initialize all event listeners
+        function initEventListeners() {
+            const searchBox = document.getElementById("searchBox");
+            const categoriesContainer = document.getElementById("categoriesContainer");
+            const clearSearch = document.getElementById("clearSearch");
+            
+            // Search functionality
+            searchBox.addEventListener('input', function(e) {
+                if (this.value.trim() === '') {
+                    categoriesContainer.style.display = 'none';
+                    return;
+                }
+                
+                renderCategoryOptions(this.value);
+                categoriesContainer.style.display = 'block';
+            });
+            
+            // Show categories when search box is focused
+            searchBox.addEventListener('focus', function() {
+                if (this.value.trim() !== '') {
+                    renderCategoryOptions(this.value);
+                    categoriesContainer.style.display = 'block';
+                }
+            });
+            
+            // Hide categories when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#searchContainer')) {
+                    categoriesContainer.style.display = 'none';
+                }
+            });
+            
+            // Clear search
+            clearSearch.addEventListener('click', function() {
+                searchBox.value = '';
+                categoriesContainer.style.display = 'none';
+                searchBox.focus();
+            });
+            
+            // File selection
+            document.getElementById("customFileButton").addEventListener("click", function() {
+                document.getElementById("fileInput").click();
+            });
+
+            // File input change
+            document.getElementById("fileInput").addEventListener("change", function(e) {
+                currentFile = e.target.files[0];
+                const display = document.getElementById("file-display");
+                display.textContent = currentFile ? `📄 ${currentFile.name}` : "No file selected";
+                document.getElementById("analyzeButton").disabled = !currentFile;
+            });
+
+            // Analyze button
+            document.getElementById("analyzeButton").addEventListener("click", analyzeDocument);
+
+            // Clear button
+            document.getElementById("clearButton").addEventListener("click", clearAll);
+        }
+
+        // 5. Analyze document (unchanged)
+        async function analyzeDocument() {
+            if (!currentFile) return;
+            
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "<p>Analyzing document... ⏳</p>";
+            
+            try {
+                let text;
+                if (currentFile.type === "application/pdf" || currentFile.name.endsWith('.pdf')) {
+                    text = await extractTextFromPDF(currentFile);
+                } 
+                else if (currentFile.type.includes("wordprocessingml.document") || currentFile.name.endsWith('.docx')) {
+                    text = await extractTextFromDOCX(currentFile);
+                } 
+                else {
+                    throw new Error("Unsupported file type. Please upload PDF or Word (.docx) files.");
+                }
+                
+                analyzeText(text.toLowerCase());
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+                console.error("Analysis error:", error);
+            }
+        }
+
+        // 6. Clear all (unchanged)
+        function clearAll() {
+            // Reset file inputs
+            document.getElementById("fileInput").value = "";
+            document.getElementById("file-display").textContent = "No file selected";
+            document.getElementById("results").innerHTML = "";
+            document.getElementById("analyzeButton").disabled = true;
+            currentFile = null;
+            
+            // Reset categories
+            Object.keys(selectedCategories).forEach(cat => {
+                selectedCategories[cat] = false;
+            });
+            
+            // Reset search and re-render
+            document.getElementById("searchBox").value = "";
+            document.getElementById("categoriesContainer").style.display = "none";
+            updateSelectedCount();
+        }
+
+        // 7. Text extraction functions (unchanged)
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                fullText += content.items.map(item => item.str).join(" ") + " ";
+            }
+            return fullText;
+        }
+
+        async function extractTextFromDOCX(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            return result.value;
+        }
+
+        // 8. Analysis function (unchanged)
+        function analyzeText(text) {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "<h2>🔎 Analysis Results</h2>";
+
+            const categoryResults = Object.entries(categories)
+                .filter(([category]) => selectedCategories[category])
+                .map(([category, keywords]) => {
+                    let uniqueMatches = new Set();
+                    let absoluteCount = 0;
+                    let foundKeywords = [];
+
+                    keywords.forEach(keyword => {
+                        const matches = text.match(new RegExp(`\\b${keyword}\\b`, "gi")) || [];
+                        if (matches.length > 0) {
+                            uniqueMatches.add(keyword);
+                            foundKeywords.push(keyword);
+                        }
+                        absoluteCount += matches.length;
+                    });
+
+                    const missingKeywords = keywords.filter(kw => !foundKeywords.includes(kw));
+
+                    return {
+                        category,
+                        uniquePercent: ((uniqueMatches.size / keywords.length) * 100),
+                        uniqueCount: uniqueMatches.size,
+                        totalKeywords: keywords.length,
+                        absoluteCount: absoluteCount,
+                        missingKeywords: missingKeywords
+                    };
+                })
+                .sort((a, b) => b.uniquePercent - a.uniquePercent);
+
+            if (categoryResults.every(r => r.uniqueCount === 0)) {
+                resultsDiv.innerHTML += "<p>❌ No keywords detected in selected categories.</p>";
+                return;
+            }
+
+            categoryResults.forEach(result => {
+                if (result.uniqueCount === 0) return;
+                
+                const feedback = getMatchFeedback(result.uniquePercent);
+                resultsDiv.innerHTML += `
+                    <div class="category-result ${feedback.class}">
+                        <strong>${result.category}</strong>
+                        <div>📊 Coverage: ${result.uniquePercent.toFixed(1)}% 
+                            (${result.uniqueCount}/${result.totalKeywords} keywords matched)</div>
+                        <div>🔢 Frequency: ${result.absoluteCount} total occurrences</div>
+                        <div>💬 Verdict: ${feedback.text}</div>
+                        ${result.missingKeywords.length > 0 ? `
+                        <div class="missing-keywords">
+                            <div>🔍 Keywords to add:</div>
+                            ${result.missingKeywords.map(kw => `<span>${kw}</span>`).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        // 9. Match feedback helper (unchanged)
+        function getMatchFeedback(percent) {
+            if (percent >= 90) return { text: "✅ Perfect match", class: "perfect" };
+            if (percent >= 60) return { text: "👍 Good match", class: "good" };
+            if (percent >= 30) return { text: "⚠️ Needs improvement", class: "needs-improvement" };
+            return { text: "❌ Needs immediate improvement", class: "critical" };
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', loadCategories);
+    </script>
+</body>
+</html>
