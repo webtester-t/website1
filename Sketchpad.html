@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sketch Pad 0.2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            position: relative;
+        }
+
+        body.dark-mode .container {
+            background-color: #1e1e1e;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        body.dark-mode header {
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .logo h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: #666;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        body.dark-mode .theme-toggle {
+            color: #aaa;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .canvas-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            background-color: white;
+            cursor: crosshair;
+        }
+
+        body.dark-mode canvas {
+            background-color: #1e1e1e;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 10px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        body.dark-mode .controls {
+            background-color: #1e1e1e;
+            border-top: 1px solid #333;
+        }
+
+        .btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: #666;
+            padding: 5px 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            min-width: 50px;
+        }
+
+        body.dark-mode .btn {
+            color: #aaa;
+        }
+
+        .btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+            margin-bottom: 3px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn:disabled:hover {
+            background-color: transparent;
+        }
+
+        .color-picker {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        body.dark-mode .color-picker {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .color-option {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-option.active {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+
+        body.dark-mode .color-option.active {
+            border-color: #f5f5f5;
+        }
+
+        .brush-size {
+            position: absolute;
+            bottom: 70px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        body.dark-mode .brush-size {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .size-option {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 9px;
+        }
+
+        body.dark-mode .size-option {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .size-option.active {
+            transform: scale(1.2);
+            background-color: #4a90e2;
+        }
+
+        .size-option.small {
+            width: 8px;
+            height: 8px;
+        }
+
+        .size-option.medium {
+            width: 12px;
+            height: 12px;
+        }
+
+        .size-option.large {
+            width: 18px;
+            height: 18px;
+        }
+
+        .texture-option {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 11px;
+            background-color: #f0f0f0;
+        }
+
+        body.dark-mode .texture-option {
+            background-color: #444;
+        }
+
+        .texture-option.active {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+
+        body.dark-mode .texture-option.active {
+            border-color: #f5f5f5;
+        }
+
+        .color-picker-container {
+            position: absolute;
+            bottom: 130px;
+            left: 10px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 12px;
+            z-index: 10;
+            display: none;
+            width: 170px;
+        }
+
+        body.dark-mode .color-picker-container {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .color-picker-container.active {
+            display: block;
+        }
+
+        .color-preview {
+            width: 100%;
+            height: 30px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .color-area {
+            width: 130px;
+            height: 130px;
+            border-radius: 8px;
+            position: relative;
+            cursor: crosshair;
+            margin: 0 auto 10px;
+            background: linear-gradient(to top, #000, transparent), 
+                        linear-gradient(to right, #fff, hsl(var(--hue, 0), 100%, 50%));
+        }
+
+        .color-area-selector {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        .hue-slider-container {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .hue-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+            outline: none;
+        }
+
+        .hue-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+
+        .color-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .color-input input {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        body.dark-mode .color-input input {
+            background-color: #444;
+            color: white;
+            border-color: #666;
+        }
+
+        .toggle-color-picker {
+            position: absolute;
+            bottom: 70px;
+            left: 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .toggle-color-picker i {
+            color: white;
+            font-size: 16px;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+        }
+
+        .texture-container {
+            position: absolute;
+            bottom: 130px;
+            right: 10px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 12px;
+            z-index: 10;
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        body.dark-mode .texture-container {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .texture-container.active {
+            display: grid;
+        }
+
+        .toggle-texture {
+            position: absolute;
+            bottom: 70px;
+            right: 55px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #6c5ce7;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .toggle-texture i {
+            color: white;
+            font-size: 16px;
+        }
+
+        .current-color {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            margin-top: 8px;
+        }
+
+        .current-settings {
+            position: absolute;
+            top: 70px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background-color: white;
+            padding: 8px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 11px;
+        }
+
+        body.dark-mode .current-settings {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .current-settings-label {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .eraser-toggle {
+            position: absolute;
+            bottom: 70px;
+            left: 55px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #ff6b6b;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .eraser-toggle i {
+            color: white;
+            font-size: 16px;
+        }
+
+        .eraser-toggle.active {
+            background-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.5);
+        }
+
+        .tool-status {
+            position: absolute;
+            top: 70px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background-color: white;
+            padding: 8px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 11px;
+        }
+
+        body.dark-mode .tool-status {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .tool-status .status {
+            font-weight: bold;
+            color: #4a90e2;
+        }
+
+        /* Media query for very small screens */
+        @media (max-width: 360px) {
+            header {
+                padding: 10px 12px;
+            }
+            
+            .logo h1 {
+                font-size: 1.1rem;
+            }
+            
+            .btn {
+                font-size: 0.65rem;
+                padding: 4px 6px;
+                min-width: 45px;
+            }
+            
+            .btn i {
+                font-size: 1.1rem;
+            }
+            
+            .color-picker-container {
+                width: 150px;
+                padding: 10px;
+            }
+            
+            .color-area {
+                width: 110px;
+                height: 110px;
+            }
+            
+            .toggle-color-picker, .toggle-texture, .eraser-toggle {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .toggle-color-picker i, .toggle-texture i, .eraser-toggle i {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span>🎨</span>
+                <h1>Sketch Pad</h1>
+            </div>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+        </header>
+        
+        <div class="tool-status">
+            <div>Current Tool:</div>
+            <div class="status" id="toolStatus">Brush</div>
+        </div>
+        
+        <div class="current-settings">
+            <div class="current-settings-label">Current Brush</div>
+            <div class="current-color" id="currentColor"></div>
+            <div class="current-size" id="currentSize">M</div>
+            <div class="current-texture" id="currentTexture">●</div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="sketchCanvas"></canvas>
+            
+            <div class="toggle-color-picker" id="toggleColorPicker">
+                <i class="fas fa-palette"></i>
+            </div>
+            
+            <div class="eraser-toggle" id="eraserToggle">
+                <i class="fas fa-eraser"></i>
+            </div>
+            
+            <div class="color-picker-container" id="colorPickerContainer">
+                <div class="color-preview" id="colorPreview"></div>
+                <div class="color-area" id="colorArea">
+                    <div class="color-area-selector" id="colorAreaSelector"></div>
+                </div>
+                <div class="hue-slider-container">
+                    <input type="range" min="0" max="360" value="0" class="hue-slider" id="hueSlider">
+                </div>
+                <div class="color-input">
+                    <span>#</span>
+                    <input type="text" id="colorHexInput" maxlength="7" placeholder="Hex code">
+                </div>
+                <div class="current-color" id="selectedColor"></div>
+            </div>
+            
+            <div class="toggle-texture" id="toggleTexture">
+                <i class="fas fa-texture"></i>
+            </div>
+            
+            <div class="texture-container" id="textureContainer">
+                <div class="texture-option active" data-texture="solid">●</div>
+                <div class="texture-option" data-texture="dotted">⋯</div>
+                <div class="texture-option" data-texture="dashed">--</div>
+                <div class="texture-option" data-texture="zigzag">⦚⦚</div>
+            </div>
+            
+            <div class="color-picker" id="colorPicker">
+                <div class="color-option active" style="background-color: #000000;" data-color="#000000"></div>
+                <div class="color-option" style="background-color: #ff3b30;" data-color="#ff3b30"></div>
+                <div class="color-option" style="background-color: #4cd964;" data-color="#4cd964"></div>
+                <div class="color-option" style="background-color: #007aff;" data-color="#007aff"></div>
+                <div class="color-option" style="background-color: #ffcc00;" data-color="#ffcc00"></div>
+            </div>
+            
+            <div class="brush-size" id="brushSize">
+                <div class="size-option small" data-size="2">S</div>
+                <div class="size-option medium active" data-size="5">M</div>
+                <div class="size-option large" data-size="10">L</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="undoBtn">
+                <i class="fas fa-undo"></i>
+                <span>Undo</span>
+            </button>
+            <button class="btn" id="clearBtn">
+                <i class="fas fa-trash-alt"></i>
+                <span>Clear All</span>
+            </button>
+            <button class="btn" id="homeBtn">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </button>
+            <button class="btn" id="redoBtn">
+                <i class="fas fa-redo"></i>
+                <span>Redo</span>
+            </button>
+            <button class="btn" id="saveBtn">
+                <i class="fas fa-save"></i>
+                <span>Save</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('sketchCanvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.querySelector('.container');
+            const themeToggle = document.getElementById('themeToggle');
+            const clearBtn = document.getElementById('clearBtn');
+            const homeBtn = document.getElementById('homeBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            const colorOptions = document.querySelectorAll('.color-option');
+            const sizeOptions = document.querySelectorAll('.size-option');
+            const textureOptions = document.querySelectorAll('.texture-option');
+            const toggleColorPicker = document.getElementById('toggleColorPicker');
+            const colorPickerContainer = document.getElementById('colorPickerContainer');
+            const colorArea = document.getElementById('colorArea');
+            const colorAreaSelector = document.getElementById('colorAreaSelector');
+            const colorPreview = document.getElementById('colorPreview');
+            const colorHexInput = document.getElementById('colorHexInput');
+            const selectedColor = document.getElementById('selectedColor');
+            const hueSlider = document.getElementById('hueSlider');
+            const toggleTexture = document.getElementById('toggleTexture');
+            const textureContainer = document.getElementById('textureContainer');
+            const currentColorDisplay = document.getElementById('currentColor');
+            const currentSizeDisplay = document.getElementById('currentSize');
+            const currentTextureDisplay = document.getElementById('currentTexture');
+            const eraserToggle = document.getElementById('eraserToggle');
+            const toolStatus = document.getElementById('toolStatus');
+            
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let currentColor = '#000000';
+            let currentSize = 5;
+            let currentTexture = 'solid';
+            let isEraserActive = false;
+            let currentHue = 0;
+            let currentSaturation = 100;
+            let currentLightness = 50;
+            
+            // Undo/Redo functionality
+            let drawingHistory = [];
+            let historyIndex = -1;
+            const MAX_HISTORY = 50;
+            
+            // Set canvas size
+            function resizeCanvas() {
+                const containerRect = container.getBoundingClientRect();
+                canvas.width = containerRect.width;
+                canvas.height = containerRect.height - 120; // Account for header and controls
+                clearCanvas();
+            }
+            
+            // Clear canvas
+            function clearCanvas() {
+                ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#1e1e1e' : 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                saveState();
+            }
+            
+            // Save canvas state for undo/redo
+            function saveState() {
+                // Remove any future states if we're not at the end of history
+                if (historyIndex < drawingHistory.length - 1) {
+                    drawingHistory = drawingHistory.slice(0, historyIndex + 1);
+                }
+                
+                // Add current state to history
+                drawingHistory.push(canvas.toDataURL());
+                
+                // Limit history size
+                if (drawingHistory.length > MAX_HISTORY) {
+                    drawingHistory.shift();
+                }
+                
+                historyIndex = drawingHistory.length - 1;
+                updateUndoRedoButtons();
+            }
+            
+            // Update undo/redo button states
+            function updateUndoRedoButtons() {
+                undoBtn.disabled = historyIndex <= 0;
+                redoBtn.disabled = historyIndex >= drawingHistory.length - 1;
+            }
+            
+            // Undo last action
+            function undo() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    restoreState();
+                }
+            }
+            
+            // Redo last undone action
+            function redo() {
+                if (historyIndex < drawingHistory.length - 1) {
+                    historyIndex++;
+                    restoreState();
+                }
+            }
+            
+            // Restore canvas state from history
+            function restoreState() {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = drawingHistory[historyIndex];
+                updateUndoRedoButtons();
+            }
+            
+            // Start drawing
+            function startDrawing(e) {
+                isDrawing = true;
+                [lastX, lastY] = getCoordinates(e);
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+            }
+            
+            // Draw
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                e.preventDefault();
+                
+                const [x, y] = getCoordinates(e);
+                
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = isEraserActive ? 
+                    (document.body.classList.contains('dark-mode') ? '#1e1e1e' : 'white') : 
+                    currentColor;
+                ctx.lineWidth = currentSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                // Apply texture
+                applyTexture(currentTexture);
+                
+                ctx.stroke();
+                
+                [lastX, lastY] = [x, y];
+            }
+            
+            // Stop drawing
+            function stopDrawing() {
+                if (isDrawing) {
+                    isDrawing = false;
+                    saveState();
+                }
+            }
+            
+            // Get coordinates from event (touch or mouse)
+            function getCoordinates(e) {
+                let clientX, clientY;
+                
+                if (e.type.includes('touch')) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                const canvasRect = canvas.getBoundingClientRect();
+                return [
+                    clientX - canvasRect.left,
+                    clientY - canvasRect.top
+                ];
+            }
+            
+            // Toggle dark/light mode
+            function toggleTheme() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    themeToggle.textContent = '☀️';
+                } else {
+                    themeToggle.textContent = '🌙';
+                }
+                // Redraw canvas with new background but preserve content
+                restoreState();
+            }
+            
+            // Save canvas as image
+            function saveAsImage() {
+                const link = document.createElement('a');
+                link.download = 'sketch-pad-drawing.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+            
+            // Apply brush texture
+            function applyTexture(texture) {
+                switch(texture) {
+                    case 'solid':
+                        ctx.setLineDash([]);
+                        break;
+                    case 'dotted':
+                        ctx.setLineDash([2, 4]);
+                        break;
+                    case 'dashed':
+                        ctx.setLineDash([10, 5]);
+                        break;
+                    case 'zigzag':
+                        ctx.setLineDash([5, 3, 1, 3]);
+                        break;
+                }
+            }
+            
+            // Update current settings display
+            function updateCurrentSettings() {
+                currentColorDisplay.style.backgroundColor = currentColor;
+                currentSizeDisplay.textContent = 
+                    currentSize === 2 ? 'S' : 
+                    currentSize === 5 ? 'M' : 'L';
+                
+                let textureSymbol = '●';
+                switch(currentTexture) {
+                    case 'dotted': textureSymbol = '⋯'; break;
+                    case 'dashed': textureSymbol = '--'; break;
+                    case 'zigzag': textureSymbol = '⦚⦚'; break;
+                }
+                currentTextureDisplay.textContent = textureSymbol;
+                
+                // Update tool status
+                if (isEraserActive) {
+                    toolStatus.textContent = 'Eraser';
+                    toolStatus.style.color = '#ff6b6b';
+                } else {
+                    toolStatus.textContent = 'Brush';
+                    toolStatus.style.color = '#4a90e2';
+                }
+            }
+            
+            // Update color from HSL values
+            function updateColorFromHSL() {
+                const rgb = hslToRgb(currentHue / 360, currentSaturation / 100, currentLightness / 100);
+                currentColor = rgbToHex(rgb[0], rgb[1], rgb[2]);
+                colorPreview.style.backgroundColor = currentColor;
+                selectedColor.style.backgroundColor = currentColor;
+                colorHexInput.value = currentColor.substring(1);
+                updateCurrentSettings();
+                
+                // Update color area background
+                colorArea.style.setProperty('--hue', currentHue);
+                
+                // Update color area selector position
+                updateColorAreaSelector();
+            }
+            
+            // Update color area selector position based on current saturation and lightness
+            function updateColorAreaSelector() {
+                const width = colorArea.offsetWidth;
+                const height = colorArea.offsetHeight;
+                
+                const x = (currentSaturation / 100) * width;
+                const y = height - (currentLightness / 100) * height;
+                
+                colorAreaSelector.style.left = x + 'px';
+                colorAreaSelector.style.top = y + 'px';
+            }
+            
+            // Color picker functionality
+            function setupColorPicker() {
+                // Toggle color picker visibility
+                toggleColorPicker.addEventListener('click', function() {
+                    colorPickerContainer.classList.toggle('active');
+                    textureContainer.classList.remove('active');
+                });
+                
+                // Handle color area selection
+                colorArea.addEventListener('click', function(e) {
+                    const rect = colorArea.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const width = colorArea.offsetWidth;
+                    const height = colorArea.offsetHeight;
+                    
+                    // Calculate saturation and lightness
+                    currentSaturation = Math.min(100, Math.max(0, (x / width) * 100));
+                    currentLightness = Math.min(100, Math.max(0, 100 - (y / height) * 100));
+                    
+                    updateColorFromHSL();
+                    
+                    // Deactivate eraser when selecting a color
+                    isEraserActive = false;
+                    eraserToggle.classList.remove('active');
+                    updateCurrentSettings();
+                });
+                
+                // Handle hue slider
+                hueSlider.addEventListener('input', function() {
+                    currentHue = parseInt(this.value);
+                    updateColorFromHSL();
+                });
+                
+                // Handle hex color input
+                colorHexInput.addEventListener('input', function() {
+                    let hex = this.value;
+                    // Remove # if present
+                    hex = hex.replace('#', '');
+                    
+                    if (hex.length === 6) {
+                        if (/^[0-9A-F]{6}$/i.test(hex)) {
+                            currentColor = '#' + hex;
+                            colorPreview.style.backgroundColor = currentColor;
+                            selectedColor.style.backgroundColor = currentColor;
+                            
+                            // Convert hex to HSL to update the color picker
+                            const rgb = hexToRgb(currentColor);
+                            if (rgb) {
+                                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                                currentHue = hsl.h;
+                                currentSaturation = hsl.s * 100;
+                                currentLightness = hsl.l * 100;
+                                hueSlider.value = currentHue;
+                                updateColorAreaSelector();
+                                updateColorFromHSL();
+                            }
+                            
+                            updateCurrentSettings();
+                            
+                            // Deactivate eraser when selecting a color
+                            isEraserActive = false;
+                            eraserToggle.classList.remove('active');
+                            updateCurrentSettings();
+                        }
+                    }
+                });
+            }
+            
+            // Texture selection functionality
+            function setupTextureSelection() {
+                // Toggle texture container visibility
+                toggleTexture.addEventListener('click', function() {
+                    textureContainer.classList.toggle('active');
+                    colorPickerContainer.classList.remove('active');
+                });
+                
+                // Handle texture selection
+                textureOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        textureOptions.forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        currentTexture = this.getAttribute('data-texture');
+                        updateCurrentSettings();
+                    });
+                });
+            }
+            
+            // Brush size functionality
+            function setupBrushSizes() {
+                sizeOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        sizeOptions.forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        currentSize = parseInt(this.getAttribute('data-size'));
+                        updateCurrentSettings();
+                    });
+                });
+            }
+            
+            // Eraser functionality
+            function setupEraser() {
+                eraserToggle.addEventListener('click', function() {
+                    isEraserActive = !isEraserActive;
+                    eraserToggle.classList.toggle('active');
+                    updateCurrentSettings();
+                });
+            }
+            
+            // Utility functions for color conversion
+            function hslToRgb(h, s, l) {
+                let r, g, b;
+                
+                if (s === 0) {
+                    r = g = b = l; // achromatic
+                } else {
+                    const hue2rgb = (p, q, t) => {
+                        if (t < 0) t += 1;
+                        if (t > 1) t -= 1;
+                        if (t < 1/6) return p + (q - p) * 6 * t;
+                        if (t < 1/2) return q;
+                        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                        return p;
+                    };
+                    
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r = hue2rgb(p, q, h + 1/3);
+                    g = hue2rgb(p, q, h);
+                    b = hue2rgb(p, q, h - 1/3);
+                }
+                
+                return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+            }
+            
+            function rgbToHex(r, g, b) {
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+            
+            function hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+            
+            function rgbToHsl(r, g, b) {
+                r /= 255;
+                g /= 255;
+                b /= 255;
+                
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                let h, s, l = (max + min) / 2;
+                
+                if (max === min) {
+                    h = s = 0; // achromatic
+                } else {
+                    const d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    
+                    switch (max) {
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    
+                    h /= 6;
+                }
+                
+                return {
+                    h: h * 360,
+                    s: s,
+                    l: l
+                };
+            }
+            
+            // Initialize
+            function init() {
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                
+                // Event listeners for drawing
+                canvas.addEventListener('mousedown', startDrawing);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseup', stopDrawing);
+                canvas.addEventListener('mouseout', stopDrawing);
+                
+                canvas.addEventListener('touchstart', startDrawing);
+                canvas.addEventListener('touchmove', draw);
+                canvas.addEventListener('touchend', stopDrawing);
+                
+                // Event listeners for buttons
+                themeToggle.addEventListener('click', toggleTheme);
+                clearBtn.addEventListener('click', clearCanvas);
+                homeBtn.addEventListener('click', () => location.reload());
+                saveBtn.addEventListener('click', saveAsImage);
+                undoBtn.addEventListener('click', undo);
+                redoBtn.addEventListener('click', redo);
+                
+                // Event listeners for color options
+                colorOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        colorOptions.forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        currentColor = this.getAttribute('data-color');
+                        
+                        // Convert hex to HSL to update the color picker
+                        const rgb = hexToRgb(currentColor);
+                        if (rgb) {
+                            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                            currentHue = hsl.h;
+                            currentSaturation = hsl.s * 100;
+                            currentLightness = hsl.l * 100;
+                            hueSlider.value = currentHue;
+                            updateColorAreaSelector();
+                            updateColorFromHSL();
+                        }
+                        
+                        updateCurrentSettings();
+                        
+                        // Deactivate eraser when selecting a color
+                        isEraserActive = false;
+                        eraserToggle.classList.remove('active');
+                        updateCurrentSettings();
+                    });
+                });
+                
+                // Setup brush sizes, color picker, texture selection, and eraser
+                setupBrushSizes();
+                setupColorPicker();
+                setupTextureSelection();
+                setupEraser();
+                
+                // Initialize current settings display
+                updateCurrentSettings();
+                selectedColor.style.backgroundColor = currentColor;
+                colorPreview.style.backgroundColor = currentColor;
+                
+                // Initialize undo/redo
+                saveState();
+            }
+            
+            init();
+        });
+    </script>
+</body>
+</html>
