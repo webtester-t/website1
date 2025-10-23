@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe</title>
+    <title>Tic Tac Toe - Player Modes</title>
     <style>
         * {
             margin: 0;
@@ -22,7 +22,7 @@
         }
         
         .container {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             padding: 30px;
@@ -35,6 +35,35 @@
             color: #333;
             margin-bottom: 20px;
             font-size: 2.5rem;
+        }
+        
+        .game-mode {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .mode-btn {
+            background-color: #f5f5f5;
+            border: 2px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            flex: 1;
+            max-width: 180px;
+        }
+        
+        .mode-btn.active {
+            background-color: #2575fc;
+            color: white;
+            border-color: #2575fc;
+        }
+        
+        .mode-btn:hover:not(.active) {
+            background-color: #e9e9e9;
         }
         
         .game-info {
@@ -156,12 +185,26 @@
             .cell {
                 font-size: 2.5rem;
             }
+            
+            .game-mode {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .mode-btn {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Tic Tac Toe</h1>
+        
+        <div class="game-mode">
+            <button class="mode-btn active" id="human-human">Human vs Human</button>
+            <button class="mode-btn" id="human-system">Human vs System</button>
+        </div>
         
         <div class="game-info">
             <div class="player-turn">Current Player: <span id="current-player">X</span></div>
@@ -204,6 +247,7 @@
             let currentPlayer = 'X';
             let gameBoard = ['', '', '', '', '', '', '', '', ''];
             let gameActive = true;
+            let gameMode = 'human-human'; // Default mode
             let scores = {
                 X: 0,
                 O: 0,
@@ -218,6 +262,41 @@
             const scoreXElement = document.getElementById('score-x');
             const scoreOElement = document.getElementById('score-o');
             const scoreDrawElement = document.getElementById('score-draw');
+            const humanHumanBtn = document.getElementById('human-human');
+            const humanSystemBtn = document.getElementById('human-system');
+            
+            // Create audio elements for sound effects
+            const tickSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
+            const tacSound = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==");
+            
+            // Generate simple beep sounds
+            function generateBeepSound(frequency, duration, type) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+            
+            // Play sound for player X (tick)
+            function playTickSound() {
+                generateBeepSound(800, 0.1, 'sine');
+            }
+            
+            // Play sound for player O (tac)
+            function playTacSound() {
+                generateBeepSound(600, 0.1, 'sine');
+            }
             
             // Winning combinations
             const winningConditions = [
@@ -241,8 +320,83 @@
                 clickedCell.textContent = currentPlayer;
                 clickedCell.classList.add(currentPlayer.toLowerCase());
                 
+                // Play sound based on current player
+                if (currentPlayer === 'X') {
+                    playTickSound();
+                } else {
+                    playTacSound();
+                }
+                
                 // Check for win or draw
                 checkGameResult();
+                
+                // If playing against system and game is still active, make system move
+                if (gameMode === 'human-system' && gameActive && currentPlayer === 'O') {
+                    setTimeout(makeSystemMove, 500);
+                }
+            }
+            
+            // Make system move (AI)
+            function makeSystemMove() {
+                if (!gameActive) return;
+                
+                // Simple AI: Try to win, then block, then choose center, then random
+                let availableCells = [];
+                gameBoard.forEach((cell, index) => {
+                    if (cell === '') availableCells.push(index);
+                });
+                
+                if (availableCells.length === 0) return;
+                
+                let move;
+                
+                // Try to win
+                move = findWinningMove('O');
+                if (move === -1) {
+                    // Block player from winning
+                    move = findWinningMove('X');
+                }
+                if (move === -1) {
+                    // Choose center if available
+                    if (gameBoard[4] === '') {
+                        move = 4;
+                    }
+                }
+                if (move === -1) {
+                    // Choose a random available cell
+                    move = availableCells[Math.floor(Math.random() * availableCells.length)];
+                }
+                
+                // Make the move
+                gameBoard[move] = 'O';
+                cells[move].textContent = 'O';
+                cells[move].classList.add('o');
+                
+                // Play sound for system move
+                playTacSound();
+                
+                // Check for win or draw
+                checkGameResult();
+            }
+            
+            // Find a winning move for the specified player
+            function findWinningMove(player) {
+                for (let condition of winningConditions) {
+                    const [a, b, c] = condition;
+                    const cells = [gameBoard[a], gameBoard[b], gameBoard[c]];
+                    
+                    // Count player's marks and empty cells
+                    const playerCount = cells.filter(cell => cell === player).length;
+                    const emptyCount = cells.filter(cell => cell === '').length;
+                    
+                    // If player has 2 marks and 1 empty cell, return the empty cell index
+                    if (playerCount === 2 && emptyCount === 1) {
+                        if (gameBoard[a] === '') return a;
+                        if (gameBoard[b] === '') return b;
+                        if (gameBoard[c] === '') return c;
+                    }
+                }
+                return -1;
             }
             
             // Check game result
@@ -319,6 +473,28 @@
                 currentPlayerElement.textContent = currentPlayer;
                 gameStatusElement.textContent = 'Game in progress';
                 gameStatusElement.style.backgroundColor = '#f5f5f5';
+                
+                // If playing against system and system goes first, make system move
+                if (gameMode === 'human-system' && currentPlayer === 'O') {
+                    setTimeout(makeSystemMove, 500);
+                }
+            }
+            
+            // Set game mode
+            function setGameMode(mode) {
+                gameMode = mode;
+                
+                // Update UI
+                if (mode === 'human-human') {
+                    humanHumanBtn.classList.add('active');
+                    humanSystemBtn.classList.remove('active');
+                } else {
+                    humanHumanBtn.classList.remove('active');
+                    humanSystemBtn.classList.add('active');
+                }
+                
+                // Reset game when changing mode
+                resetGame();
             }
             
             // Event listeners
@@ -327,6 +503,9 @@
             });
             
             resetButton.addEventListener('click', resetGame);
+            
+            humanHumanBtn.addEventListener('click', () => setGameMode('human-human'));
+            humanSystemBtn.addEventListener('click', () => setGameMode('human-system'));
             
             // Initialize score display
             updateScoreDisplay();
